@@ -41,3 +41,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Directories specific to this project workspace
+
+bin\
+[Pp]roject1\bin\*

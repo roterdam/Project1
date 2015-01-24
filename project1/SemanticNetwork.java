@@ -3,8 +3,11 @@ package project1;
 public class SemanticNetwork {
 
 	public void Entry() {
-		// TODO Auto-generated method stub
-		
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}	
 	}
 
 }

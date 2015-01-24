@@ -6,18 +6,27 @@ import java.util.HashMap;
 
 
 public class Agent {
-   
-	// Classes instances
-	private RavensProblem problem;
-	private SemanticNetwork semNet;
-	private MeansEnds meansEnds;
+
+	// Switches for monitoring agent execution and debugging  
+	public static final boolean SOLVE_SINGLE_PROBLEM = false;				//* results in only a single problem
+																			//*   to be solved by name
+	public static final String debugThisProblem = "2x1 Basic Problem 01";	//* name of single problem
+																			//*   to be solved
+	
+	public static final boolean ENABLE_CONSOLE = true;  // enables/disables console output
 	
 	// Constants
-	public static final boolean ENABLE_CONSOLE = true;  // enables/disables console output
 	public static final String TIMESTAMP = "TIMESTAMP";
 	public static final String AGENT_START = "AGENT_START";
 	public static final String PROBLEM_START = "PROBLEM_START";
+	public static final String DEFAULT_ANSWER = "1";
 	
+	// Classes instances
+	private RavensProblem problem;
+	private RavensGizmos gizmos;
+	private SemanticNetwork semNet;
+	private MeansEnds meansEnds;
+		
 	// Hashmaps
 	HashMap<String, RavensFigure> figures;
    
@@ -26,10 +35,14 @@ public class Agent {
      * Default constructor
      */
 	public Agent() {
-		consoleMsg(AGENT_START, null);
+		
+    	this.gizmos = new RavensGizmos();
+    								 
+		gizmos.consoleMsg(AGENT_START, null);
+		
     }
 	
-    /**
+	/**
      * The primary method for solving incoming Raven's Progressive Matrices.
      * For each problem, your Agent's Solve() method will be called. At the
      * conclusion of Solve(), your Agent should return a String representing its
@@ -37,109 +50,57 @@ public class Agent {
      * are also the Names of the individual RavensFigures, obtained through
      * RavensFigure.getName().
      * 
-     * In addition to returning your answer at the end of the method, your Agent
-     * may also call problem.checkAnswer(String givenAnswer). The parameter
-     * passed to checkAnswer should be your Agent's current guess for the
-     * problem; checkAnswer will return the correct answer to the problem. This
-     * allows your Agent to check its answer. Note, however, that after your
-     * agent has called checkAnswer, it will *not* be able to change its answer.
-     * checkAnswer is used to allow your Agent to learn from its incorrect
-     * answers; however, your Agent cannot change the answer to a question it
-     * has already answered.
-     * 
-     * If your Agent calls checkAnswer during execution of Solve, the answer it
-     * returns will be ignored; otherwise, the answer returned at the end of
-     * Solve will be taken as your Agent's answer to this problem.
-     * 
-     * @param problem the RavensProblem your agent should solve
-     * @return your Agent's answer to this problem
+     * @param problem the RavensProblem the agent given
+     * @return Agent's answer to the problem
      */
 	public String Solve(RavensProblem problem) {
-        
-    	// Initialization and miscellaneous housekeeping
+       
+		// Initialization and miscellaneous housekeeping
     	this.problem = problem;
-    	consoleMsg(PROBLEM_START, this.problem.getName());
-    	
-    	semNet = new SemanticNetwork();
-    	meansEnds = new MeansEnds();
-    	long problemStartTime;
-    	long problemEndTime;
-    	
-    	String agentAnswer = "";  // initialize the Agent's answer.
-
-    	problemStartTime = System.nanoTime();  // THIS STATEMENT'S POSITION IS IMPORTANT!
-    	try {
-    		//this.figures = problem.getFigures();
-    		//consoleMsg(TIMESTAMP, "figure A is " + this.problem.getFigures().get("A"));
-    		//consoleMsg(TIMESTAMP, "figure B is " + figures.get("B"));
-    		//consoleMsg(TIMESTAMP, "figure C is " + figures.get("C"));
-    		semNet.Entry(); //TODO: replace with functioning code
-		} catch (Exception e) {
-    		consoleMsg(TIMESTAMP, "FAILURE - Semantic Network aborted");
-			e.printStackTrace();
+    	String agentAnswer = DEFAULT_ANSWER;	// initialize the Agent's answer.
+		
+		if (!SOLVE_SINGLE_PROBLEM){
+			agentAnswer = solveThisProblem();
+		} else if (SOLVE_SINGLE_PROBLEM && (this.problem.getName().equals(debugThisProblem))) {	
+	    	agentAnswer = solveThisProblem();
 		}
-		
-		try {
-			agentAnswer = meansEnds.Exit(); //TODO: replace with functioning code
-		} catch (Exception e) {
-    		consoleMsg(TIMESTAMP, "FAILURE - Means-Ends aborted");
-			e.printStackTrace();
-		}
-		problemEndTime = System.nanoTime();  // THIS STATEMENT'S POSITION IS IMPORTANT!
-
-		// List the answer and time in milliseconds it took to solve the problem
-		consoleMsg(TIMESTAMP, "answer is " + agentAnswer);
-		long problemElapsedTimeMs = ((problemEndTime - problemStartTime) / 1000000);
-		consoleMsg(TIMESTAMP, "solution took = " + Long.toString(problemElapsedTimeMs) + " ms");
-		
-		// Dispose of Class instantiations created by this program. 
-		semNet = null;
-		meansEnds = null;
-		
     	return agentAnswer;
     }
 
-    /*****
-     * Prints a message to the console, as a debugging aid. It can also be used
-     * to monitor the progress of the agent as it works on the problem.  It is
-     * particularly helpful when watching for endless loops.
-     * 
-     * Requires that ENABLE_CONSOLE is true to print messages to system console.
-     * The default setting is ENABLE_CONSOLE = true.
-     * 
-     * Parameters: 
-     * 	String type
-     * 		TIMESTAMP prefixes the message with a time stamp (hh.mm.ss:SSS)
-     * 		PROBLEM_START prints the name of the problem
-     * 		AGENT_START prints the date Agent() was instantiated (yyyy.MM.dd E)
-     * 	String msg - the message that will be printed 
-     */
-    private void consoleMsg(String type, String msg) {
-
-		if (ENABLE_CONSOLE) {
-			Date sysClock = new Date();
-			SimpleDateFormat df = new SimpleDateFormat();
-			switch (type) {
-	        	case TIMESTAMP:
-	        		df.applyPattern("hh.mm.ss:S ");
-	        		System.out.println(df.format(sysClock) + msg);
-	        		break;
-	        	case PROBLEM_START:
-	        		System.out.println("\n************* " + msg);
-	        		break;
-	        	case AGENT_START:
-	        		df.applyPattern("yyyy.MM.dd E");
-	        		String asterisks = "***************************************";
-	        		System.out.println("\n\n" + asterisks);
-	        		System.out.println("*** Agent Started on " + df.format(sysClock));
-	           		System.out.println(asterisks);
-	        		break;
-	        	default: 
-	        		System.out.println(msg);
-	        		break;
-			}
+    private String solveThisProblem() {
+    	
+    	gizmos.consoleMsg(PROBLEM_START, this.problem.getName());
+    	
+    	this.semNet = new SemanticNetwork();
+    	this.meansEnds = new MeansEnds();
+    	String answer = DEFAULT_ANSWER;
+    	
+    	long problemStartTime = System.nanoTime();  // THIS STATEMENT'S POSITION IS IMPORTANT!
+    	try {
+    		semNet.Entry(); //TODO: replace with functioning code
+		} catch (Exception e) {
+			gizmos.consoleMsg(TIMESTAMP, "FAILURE: Semantic Network - problem aborted");
+    		gizmos.reportElapsedTime(problemStartTime);
+			e.printStackTrace();
+			return DEFAULT_ANSWER;
 		}
 		
+		try {
+			answer = meansEnds.Exit(); //TODO: replace with functioning code
+		} catch (Exception e) {
+			gizmos.consoleMsg(TIMESTAMP, "FAILURE: Means-Ends - problem aborted");
+    		gizmos.reportElapsedTime(problemStartTime);
+			e.printStackTrace();
+			return DEFAULT_ANSWER;
+		}
+
+		// Dispose of Class instantiations created by this program. 
+		this.semNet = null;
+		this.meansEnds = null;
+		
+		gizmos.reportElapsedTime(problemStartTime);
+		gizmos.consoleMsg(TIMESTAMP, "answer is " + answer);
+		return answer;
 	}
-	
+
 }
