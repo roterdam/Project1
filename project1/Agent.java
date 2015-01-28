@@ -7,23 +7,35 @@ import java.util.HashMap;
 
 public class Agent {
 
-	// Switches for monitoring agent execution and debugging  
-	public static final boolean SOLVE_SINGLE_PROBLEM = false;				//* results in only a single problem
-																			//*   to be solved by name
-	public static final String debugThisProblem = "2x1 Basic Problem 01";	//* name of single problem
-																			//*   to be solved
+	//*****************************************************************************************************
+	//*****************************************************************************************************
+	//  SWITCHES FOR MONITORING AGENT EXECUTION AND FOR DEBUGGING PURPOSES 
 	
-	public static final boolean ENABLE_CONSOLE = true;  // enables/disables console output
+	protected static final boolean ENABLE_CONSOLE = true;  		// enables/disables console output
+	
+	static final boolean solveSingleProblem = true;					// Results in only a single problem
+																	//   to be solved by name.
+	
+	private static final String debugThisProblem = "2x1 Basic Problem 12";	// Name of the single problem
+																			//   to be solved.
+	
+	private static final boolean listProblemDetails = true;		// When true, the contents of the
+																//   RavensProblem object are listed
+																//   on the system console.
+
+	//*****************************************************************************************************
+	//*****************************************************************************************************
 	
 	// Constants
-	public static final String TIMESTAMP = "TIMESTAMP";
-	public static final String AGENT_START = "AGENT_START";
-	public static final String PROBLEM_START = "PROBLEM_START";
-	public static final String DEFAULT_ANSWER = "1";
+	protected static final String TIMESTAMP = "TIMESTAMP";
+	protected static final String AGENT_START = "AGENT_START";
+	protected static final String PROBLEM_START = "PROBLEM_START";
+	protected static final String NO_TIMESTAMP = "NO_TIMESTAMP";
+	protected static final String DEFAULT_ANSWER = "1";
 	
 	// Classes instances
 	private RavensProblem problem;
-	private RavensGizmos gizmos;
+	private ConsoleLog conLog; 
 	private SemanticNetwork semNet;
 	private MeansEnds meansEnds;
 		
@@ -36,9 +48,8 @@ public class Agent {
      */
 	public Agent() {
 		
-    	this.gizmos = new RavensGizmos();
-    								 
-		gizmos.consoleMsg(AGENT_START, null);
+    	this.conLog = new ConsoleLog();							 
+    	conLog.writeMsg(AGENT_START, null);
 		
     }
 	
@@ -59,37 +70,40 @@ public class Agent {
     	this.problem = problem;
     	String agentAnswer = DEFAULT_ANSWER;	// initialize the Agent's answer.
 		
-		if (!SOLVE_SINGLE_PROBLEM){
+		if (!solveSingleProblem){
+			// Process all RavensProblem objects
 			agentAnswer = solveThisProblem();
-		} else if (SOLVE_SINGLE_PROBLEM && (this.problem.getName().equals(debugThisProblem))) {	
+		} else if (solveSingleProblem && (this.problem.getName().equals(debugThisProblem))) {	
+			// Process only a single RavensProblem object by name
 	    	agentAnswer = solveThisProblem();
 		}
+			
     	return agentAnswer;
     }
 
     private String solveThisProblem() {
     	
-    	gizmos.consoleMsg(PROBLEM_START, this.problem.getName());
+    	conLog.writeMsg(PROBLEM_START, this.problem.getName());
     	
-    	this.semNet = new SemanticNetwork();
-    	this.meansEnds = new MeansEnds();
     	String answer = DEFAULT_ANSWER;
-    	
+    	this.semNet = new SemanticNetwork(problem, this.conLog, this.listProblemDetails);
+    	this.meansEnds = new MeansEnds();
+
     	long problemStartTime = System.nanoTime();  // THIS STATEMENT'S POSITION IS IMPORTANT!
     	try {
-    		semNet.Entry(); //TODO: replace with functioning code
+    		semNet.build();
 		} catch (Exception e) {
-			gizmos.consoleMsg(TIMESTAMP, "FAILURE: Semantic Network - problem aborted");
-    		gizmos.reportElapsedTime(problemStartTime);
+			conLog.writeMsg(TIMESTAMP, "FAILURE: Semantic Network - problem aborted");
+    		conLog.reportElapsedTime(problemStartTime);
 			e.printStackTrace();
 			return DEFAULT_ANSWER;
 		}
 		
 		try {
-			answer = meansEnds.Exit(); //TODO: replace with functioning code
+			//TODO: MeansEnds class invocation; replace with functioning code
 		} catch (Exception e) {
-			gizmos.consoleMsg(TIMESTAMP, "FAILURE: Means-Ends - problem aborted");
-    		gizmos.reportElapsedTime(problemStartTime);
+			conLog.writeMsg(TIMESTAMP, "FAILURE: Means-Ends - problem aborted");
+    		conLog.reportElapsedTime(problemStartTime);
 			e.printStackTrace();
 			return DEFAULT_ANSWER;
 		}
@@ -98,8 +112,21 @@ public class Agent {
 		this.semNet = null;
 		this.meansEnds = null;
 		
-		gizmos.reportElapsedTime(problemStartTime);
-		gizmos.consoleMsg(TIMESTAMP, "answer is " + answer);
+		// Calculate and report the time elapsed to solve this problem.
+		conLog.reportElapsedTime(problemStartTime);
+		
+		// *** MUST ONLY EXECUTE checkAnswer() WHEN MONITORING AND DEBUGGING!!  ***
+		if (ENABLE_CONSOLE){
+			String correctAnswer = problem.checkAnswer(answer);
+			if (correctAnswer.equals(answer)){
+				conLog.writeMsg(NO_TIMESTAMP, "Correct!  Agent's answer(" + answer + ")");
+			}else{
+				conLog.writeMsg(NO_TIMESTAMP, "Agent's answer(" + answer + 
+						") - correct answer (" + correctAnswer + ")");	
+			}	
+		}
+
+
 		return answer;
 	}
 
