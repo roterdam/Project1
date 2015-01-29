@@ -13,10 +13,10 @@ public class Agent {
 	
 	protected static final boolean ENABLE_CONSOLE = true;  		// enables/disables console output
 	
-	static final boolean solveSingleProblem = true;					// Results in only a single problem
+	static final boolean solveSingleProblem = false;					// Results in only a single problem
 																	//   to be solved by name.
 	
-	private static final String debugThisProblem = "2x1 Basic Problem 12";	// Name of the single problem
+	private static final String debugThisProblem = "2x1 Basic Problem 06";	// Name of the single problem
 																			//   to be solved.
 	
 	private static final boolean listProblemDetails = true;		// When true, the contents of the
@@ -88,10 +88,14 @@ public class Agent {
     	String answer = DEFAULT_ANSWER;
     	this.semNet = new SemanticNetwork(problem, this.conLog, this.listProblemDetails);
     	this.meansEnds = new MeansEnds();
+    	// Produce a listing of all data contained in the current RavensProblem object
+    	//   if desired.  Used for monitoring & debugging purposes
+    	if (ENABLE_CONSOLE)		
+    		semNet.dumpRavensProblemDetails();
 
     	long problemStartTime = System.nanoTime();  // THIS STATEMENT'S POSITION IS IMPORTANT!
     	try {
-    		semNet.build();
+    		semNet.buildSemNet();	
 		} catch (Exception e) {
 			conLog.writeMsg(TIMESTAMP, "FAILURE: Semantic Network - problem aborted");
     		conLog.reportElapsedTime(problemStartTime);
@@ -125,9 +129,6 @@ public class Agent {
 						") - correct answer (" + correctAnswer + ")");	
 			}	
 		}
-
-
 		return answer;
 	}
-
 }
